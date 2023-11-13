@@ -19,17 +19,21 @@ authRouter.post("/login", (req, res) => {
             id: user.id,
             username: user.username
         }
+        console.log(payload)
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
             expiresIn: '1h',
-            issuer:"http://localhost/4000",
-            audience:"www.trader-log.com"
+            issuer:"http://localhost:4000",
+            // audience:"www.trader-log.com"
         });
         res.cookie('jwt', token, {
             httpOnly: true,
-            secure: true,  // Ensure this is set to false if not on HTTPS
+            secure: false,  // Ensure this is set to false if not on HTTPS
+            sameSite:'Lax',
+            path:"/",
             maxAge: 3600000
         });
-        return res.status(200).json({ message: 'User is authenticated.' });
+
+        return res.status(200).json({ message: 'User is authenticated.', userId:user.id });
     })(req, res);
 });
 

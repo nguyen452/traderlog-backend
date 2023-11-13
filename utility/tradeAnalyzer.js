@@ -4,7 +4,7 @@ class TradePerformanceAnalyzer {
     }
 
     addTrade(trade) {
-        this.data.push(data);
+        this.trades.push(trade);
     }
 
     getTotalGrossProfit() {
@@ -12,9 +12,10 @@ class TradePerformanceAnalyzer {
         if (winningTrades.length === 0) {
             return 0;
         }
-        const sumOfAllWinningTrades = winningTrades.reduce((acc, trade) => {
-            return (acc += trade);
-        });
+        const sumOfAllWinningTrades = winningTrades.reduce((accumulator, {profit}) => {
+            return accumulator + profit;
+        }, 0)
+        return sumOfAllWinningTrades
     }
 
     getTotalGrossLoss() {
@@ -67,13 +68,13 @@ class TradePerformanceAnalyzer {
     }
 
     getWinningTrades() {
-        return this.trades.filter((trade) => trade > 0)
+        return this.trades.filter((trade) => { return trade.profit > 0})
     };
     getLosingTrades() {
-       return this.trades.filter((trade => trade <0 ))
+       return this.trades.filter((trade => trade.profit <0 ))
     };;
     getBreakevenTrades() {
-       return this.trades.filter((trade => trade === 0 ))
+       return this.trades.filter((trade => trade.profit === 0 ))
     }
 
     getTotalTradesAtTime(time) {

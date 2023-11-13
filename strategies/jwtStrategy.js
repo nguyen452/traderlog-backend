@@ -14,8 +14,8 @@ const cookieExtractor = (req) => {
 const options = {
     jwtFromRequest: cookieExtractor,
     secretOrKey: process.env.JWT_SECRET,
-    issuer: "http://localhost/4000",
-    audience: "www.trader-log.com",
+    issuer: "http://localhost:4000",
+    // audience: "www.trader-log.com",
 };
 
 passport.use(
