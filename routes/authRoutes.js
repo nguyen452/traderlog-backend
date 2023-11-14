@@ -43,7 +43,6 @@ authRouter.post("/sign-up", async (req, res) => {
 
     try {
         const newUser = await insertUser(req.body);
-        console.log(newUser)
         if (newUser) {
             res.status(201).json(newUser);
         } else {

@@ -23,18 +23,18 @@ class TradePerformanceAnalyzer {
         if (losingTrades.length === 0) {
             return 0;
         }
-        const sumOfAllLosingTrades = losingTrades.reduce((acc, trade) => {
-            return (acc += trade);
-        });
+        const sumOfAllLosingTrades = losingTrades.reduce((acc, {profit}) => {
+            return (acc + profit);
+        }, 0);
     }
 
     getTotalReturn() {
         if (this.trades.length === 0) {
             return 0;
         }
-        const sumOfAllTrades = this.trades.reduce((acc, trade) => {
-            return (acc += trade);
-        });
+        const sumOfAllTrades = this.trades.reduce((acc, {profit}) => {
+            return (acc + profit);
+        }, 0);
         return sumOfAllTrades;
     }
 
@@ -42,7 +42,7 @@ class TradePerformanceAnalyzer {
         if (this.trades.length === 0) {
             return 0;
         }
-        const totalNumberOfTrade = this.trades.length + 1;
+        const totalNumberOfTrade = this.trades.length;
         const averageReturn = this.getTotalReturn() / totalNumberOfTrade;
         return averageReturn;
     }
@@ -51,7 +51,7 @@ class TradePerformanceAnalyzer {
         if (this.trades.length === 0) {
             return 0;
         }
-        const min = Math.min(...this.trades);
+        const min = Math.min(...this.trades.profit);
         return min;
     }
 
@@ -59,7 +59,7 @@ class TradePerformanceAnalyzer {
         if (this.trades.length === 0) {
             return 0;
         }
-        const min = Math.max(...this.trades);
+        const min = Math.max(...this.trades.profit);
         return max;
     }
 
