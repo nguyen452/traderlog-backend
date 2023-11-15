@@ -103,10 +103,9 @@ class TradePerformanceAnalyzer {
     getProfitsPerDay() {
         const datesProfits = this.trades.reduce((acc, trade) => {
             if (trade.date_close in acc) {
-                console.log(acc)
-                acc.trade.date_close += Number(trade.profit)
+                acc[trade.date_close] += Number(trade.profit)
             } else {
-                acc.trade.date_close = Number(trade.profit)
+                acc[trade.date_close ]= Number(trade.profit)
             }
             return acc
         }, {})
@@ -114,4 +113,5 @@ class TradePerformanceAnalyzer {
     }
 
 }
+
 module.exports = TradePerformanceAnalyzer;
