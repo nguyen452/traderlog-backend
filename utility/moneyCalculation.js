@@ -1,3 +1,4 @@
+const roundingNumbers = require('./roundingNumbers');
 // function to convert to dollars to cents
 function convertToCents(dollars) {
     const cent = 100 * Number(dollars);
@@ -7,7 +8,7 @@ function convertToCents(dollars) {
 // function to convert to cents to dollars
 function convertToDollars(cents) {
     const dollar = Number(cents) / 100;
-    return dollar.toFixed(2);
+    return roundingNumbers(dollar, 2);
 };
 
 
