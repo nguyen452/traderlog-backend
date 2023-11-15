@@ -51,6 +51,24 @@ class TradePerformanceAnalyzer {
         return roundingNumbers(averageReturn, 2);
     }
 
+    getAverageWin() {
+        if (this.trades.length === 0) {
+            return 0;
+        }
+        const totalNumberOfWinningTrades = this.getWinningTrades().length;
+        const averageWin = this.getTotalGrossProfit() / totalNumberOfWinningTrades;
+        return roundingNumbers(averageWin, 2);
+    }
+
+    getAverageLoss() {
+       if (this.trades.length === 0) {
+           return 0;
+       }
+       const totalNumberOfLosingTrades = this.getLosingTrades().length;
+       const averageLoss = this.getTotalGrossLoss() / totalNumberOfLosingTrades;
+         return Math.abs(roundingNumbers(averageLoss, 2));
+    }
+
     getLargestWin() {
         if (this.trades.length === 0) {
             return 0;
@@ -112,6 +130,27 @@ class TradePerformanceAnalyzer {
         return datesProfits;
     }
 
+    getAccumulatedProfitsPerDay() {
+        // get the profits per day
+        const profitsPerDay = this.getProfitsPerDay(); // returns an object with the date as the key and the profit as the value
+        // use object entry to turn datesProfits into an array of arrays
+        let arrayProfitsPerDay = Object.entries(profitsPerDay);
+        arrayProfitsPerDay.sort((a, b) => {
+            return new Date(a[0]) - new Date(b[0]);
+        });
+        // reduce through the array of the array
+        const dateAccumulatedProfits = []
+        const  getAccumulatedProfitsPerDay = arrayProfitsPerDay.reduce((acc, [date, profit]) => {
+            // for each element create an object with the date and the accumulated profit
+            const dateProfitObject = {
+                date: date,
+                "accumulated profits": roundingNumbers((acc + profit), 2)
+            };
+            dateAccumulatedProfits.push(dateProfitObject);
+            return acc + profit;
+        }, 0)
+        return dateAccumulatedProfits;
+    };
 }
 
 module.exports = TradePerformanceAnalyzer;

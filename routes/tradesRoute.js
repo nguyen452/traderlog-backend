@@ -51,7 +51,10 @@ tradeRouter.get("/tradeMetrics", async (req, res) => {
     const totalLosingTrades = tradesAnalyzer.getLosingTrades().length;
     const totalBreakevenTrades = tradesAnalyzer.getBreakevenTrades().length;
     const profitFactor = tradesAnalyzer.getProfitFactor();
-    const getProfitsPerDay = tradesAnalyzer.getProfitsPerDay();
+    const profitsPerDay = tradesAnalyzer.getProfitsPerDay();
+    const accumulatedProfitsPerDay = tradesAnalyzer.getAccumulatedProfitsPerDay();
+    const averageWin = tradesAnalyzer.getAverageWin();
+    const averageLoss = tradesAnalyzer.getAverageLoss();
 
     res.status(200).json({
         tradingPerformanceMetrics: {
@@ -68,7 +71,10 @@ tradeRouter.get("/tradeMetrics", async (req, res) => {
             totalLosingTrades,
             totalBreakevenTrades,
             profitFactor,
-            getProfitsPerDay
+            profitsPerDay,
+            accumulatedProfitsPerDay,
+            averageWin,
+            averageLoss
         }
     })
     } catch (error) {
