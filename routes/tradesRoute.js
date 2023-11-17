@@ -4,6 +4,7 @@ const { addTradesToTracker } = require("../utility/tradeCalculation");
 const insertTrades = require("../utility/insertTrades");
 const { Trade } = require("../db/models");
 const getAllModelDataByUserId = require("../utility/getAllModelDataByUserId");
+const getFilteredDataByPeriod = require("../utility/getFilteredDataByPeriod");
 
 const multer = require("multer");
 const fs = require("fs").promises;
@@ -27,16 +28,22 @@ tradeRouter.use(passport.authenticate("jwt", { session: false }));
 // })
 
 // get all trade
-tradeRouter.get("/tradeMetrics", async (req, res) => {
+tradeRouter.get("/tradeMetrics/:period", async (req, res) => {
+    const period = req.params.period;
     // pull all trades from database
     try {
-        const tradeData = await getAllModelDataByUserId(Trade, req.user.id);
+        let tradeData = await getAllModelDataByUserId(Trade, req.user.id);
+        console.log(tradeData)
+        // filter trades by period
+        tradeData = getFilteredDataByPeriod(tradeData, period);
+        console.log(tradeData)
 
     const tradesAnalyzer = new TradeAnalyzer();
     // add trades to tradeAnalyzer
     tradeData.forEach((trade) => {
         tradesAnalyzer.addTrade(trade);
     });
+    console.log(tradesAnalyzer.trades);
     //trading performance metrics
     const totalGrossProfit = tradesAnalyzer.getTotalGrossProfit();
     const totalGrossLoss = tradesAnalyzer.getTotalGrossLoss();
