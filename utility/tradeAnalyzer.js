@@ -144,7 +144,7 @@ class TradePerformanceAnalyzer {
             // for each element create an object with the date and the accumulated profit
             const dateProfitObject = {
                 date: date,
-                "accumulated profits": roundingNumbers((acc + profit), 2)
+                "Accumulated Profits": roundingNumbers((acc + profit), 2)
             };
             dateAccumulatedProfits.push(dateProfitObject);
             return acc + profit;
