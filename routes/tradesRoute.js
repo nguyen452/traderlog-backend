@@ -33,10 +33,8 @@ tradeRouter.get("/tradeMetrics/:period", async (req, res) => {
     // pull all trades from database
     try {
         let tradeData = await getAllModelDataByUserId(Trade, req.user.id);
-        console.log(tradeData)
         // filter trades by period
         tradeData = getFilteredDataByPeriod(tradeData, period);
-        console.log(tradeData)
 
     const tradesAnalyzer = new TradeAnalyzer();
     // add trades to tradeAnalyzer

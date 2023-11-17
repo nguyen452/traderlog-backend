@@ -3,10 +3,18 @@ const roundingNumbers = require('./roundingNumbers')
 class TradePerformanceAnalyzer {
     constructor() {
         this.trades = [];
+        this.executions = [];
     }
 
     addTrade(trade) {
         this.trades.push(trade);
+    }
+    async addExecutionsByTradeId(tradeId) {
+       const arrayOfAllTradesId = this.trades.map((trade) => {
+            const
+        })
+
+        [{tradeId: 2, tradeExecution: []}]
     }
 
     getTotalGrossProfit() {
@@ -150,7 +158,46 @@ class TradePerformanceAnalyzer {
             return acc + profit;
         }, 0)
         return dateAccumulatedProfits;
-    };
+    }
+    getAllTradeByDate(date) {
+        // get array of all trades
+        const allTrades = this.trades;
+        // filter by date by the date_close
+        const tradesByDate = allTrades.filter((trade) => {
+            new Date (trade.date_close).toISOString() === date.toISOString();
+        })
+        // return array of trades by date
+        return tradesByDate;
+    }
+
+    //trade execution metrics
+    getExecutionsByTradeId(tradeId) {
+        // get the arrays of all executions
+        const executionsOfAllTrades = this.executions.filter((execution) => execution.trade_id === tradeId); // returns an array of all executions of a trade
+        // filter by trade_id
+        return executionsOfAllTrades;
+    }
+
+    getTotalVolumePerTrade(tradeId) {
+        const executionsOfTrade = this.getExecutionsByTradeId(tradeId);
+        const totalVolume = executionsOfTrade.reduce((acc, executions) => {
+            acc += executions.qty;
+            return acc;
+        })
+        return totalVolume;
+    }
+
+    getTradeSide(tradeId) {
+        // get array of executions of trade
+        const executionsOfTrade = this.getExecutionsByTradeId(tradeId);
+        // get the first element of array and return the side
+        const side = executionsOfTrade[0].side;
+        if (side === 'SS' || side === 'BC') {
+            return 'Short';
+        } else {
+            return 'Long';
+        }
+    }
 }
 
 module.exports = TradePerformanceAnalyzer;
