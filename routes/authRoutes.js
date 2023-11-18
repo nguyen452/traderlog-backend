@@ -19,7 +19,6 @@ authRouter.post("/login", (req, res) => {
             id: user.id,
             username: user.username
         }
-        console.log(payload)
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
             expiresIn: '1h',
             issuer:"http://localhost:4000",

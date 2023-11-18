@@ -26,4 +26,3 @@ module.exports = {
     dialect: "postgres"
   }
 };
-console.log(process.env.DB_USERNAME)

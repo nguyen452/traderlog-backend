@@ -5,7 +5,6 @@ const dateParser = require('./dateParser');
 module.exports = async function insertTrades(trades , userId) {
     try {
         for (let trade of trades.completedTrades) {
-            console.log(trade);
             const newTrade = await Trade.create({
                 symbol: trade.Symbol,
                 date_open: dateParser(trade.Executions[0].date), // use dateParser to convert date to YYYY-MM-DD
