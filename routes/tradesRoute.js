@@ -34,13 +34,14 @@ tradeRouter.get("/tradeMetrics/:period", async (req, res) => {
     try {
         let tradeData = await getAllModelDataByUserId(Trade, req.user.id);
         // filter trades by period
-        tradeData = getFilteredDataByPeriod(tradeData, period);
-
+        const filteredTradeData = getFilteredDataByPeriod(tradeData, period);
+        const recentTradeData = getFilteredDataByPeriod(tradeData, "Last 30 days");// default would be last 30 days
         const tradesAnalyzer = new TradeAnalyzer();
+        const recentTradesAnalyzer = new TradeAnalyzer();
         // array of tradesId to add executions
         const tradeIdArray = [];
         // add trades to tradeAnalyzer
-        tradeData.forEach((trade) => {
+        filteredTradeData.forEach((trade) => {
             tradesAnalyzer.addTrade(trade);
             tradeIdArray.push(trade.id);
         });
@@ -70,6 +71,7 @@ tradeRouter.get("/tradeMetrics/:period", async (req, res) => {
         const averageWin = tradesAnalyzer.getAverageWin();
         const averageLoss = tradesAnalyzer.getAverageLoss();
         const completeTradesInfo = tradesAnalyzer.getCompleteTradesInfo();
+
 
 
         res.status(200).json({

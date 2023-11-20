@@ -246,7 +246,7 @@ class TradePerformanceAnalyzer {
             const symbol = trade.symbol;
             const profit = trade.profit;
             // const fees = trade.fees;
-            return { tradeId, date, symbol, profit, executionsNumber, side, totalVolume}
+            return { tradeId, date, symbol, "P&L":profit, executionsNumber, side, totalVolume}
         })
         return allTradesInfo;
         // get info like tradeId, side, symbol, qty, date, profit, volume, executions store in an array of objects

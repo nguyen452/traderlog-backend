@@ -1,4 +1,11 @@
 const getFilteredDataByPeriod = (data, period) => {
+     //helper function to transform period to kebab case
+     const transformPeriodToKebabCase = (period) => {
+        period = period.split(" ");
+        return period.join("-").toLowerCase();
+    };
+    period = transformPeriodToKebabCase(period);
+
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     // sort data by date
@@ -24,6 +31,10 @@ const getFilteredDataByPeriod = (data, period) => {
             return sortedData.slice(-7);
         } else if (period === "last-30-days") {
             return sortedData.slice(-30);
+        } else if (period === "last-15-days") {
+            return sortedData.slice(-15);
+        } else if (period === "last-5-days") {
+            return sortedData.slice(-5);
         }
     };
     // if no period is selected, return all trades
