@@ -71,13 +71,6 @@ tradeRouter.get("/tradeMetrics/:period", async (req, res) => {
         const averageWin = tradesAnalyzer.getAverageWin();
         const averageLoss = tradesAnalyzer.getAverageLoss();
         const completeTradesInfo = tradesAnalyzer.getCompleteTradesInfo();
-        const duration = tradesAnalyzer.getDuration(45);
-        const executionData = tradesAnalyzer.getExecutionsByTradeId(94);
-        console.log(tradesAnalyzer.getAverageEntryPrice(94))
-        console.log(tradesAnalyzer.getTradeSide(94))
-
-
-
 
         res.status(200).json({
             tradingPerformanceMetrics: {
@@ -99,8 +92,6 @@ tradeRouter.get("/tradeMetrics/:period", async (req, res) => {
                 averageWin,
                 averageLoss,
                 completeTradesInfo,
-                duration,
-                executionData
             },
         });
     } catch (error) {
