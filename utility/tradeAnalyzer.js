@@ -1,10 +1,11 @@
 const roundingNumbers = require("./roundingNumbers");
 const { Execution } = require("../db/models");
+const convertTimeToSeconds = require("./convertTimetoSecond");
 
 class TradePerformanceAnalyzer {
     constructor() {
         this.trades = [];
-        this.executions = [];
+        this.executions = {};
     }
 
     addTrade(trade) {
@@ -190,32 +191,28 @@ class TradePerformanceAnalyzer {
         return tradesByDate;
     }
 
-    //trade execution metrics
+    // ***********************************************************trade execution metrics
     async addExecutionsByTradeId(tradeId) {
         const executions = await Execution.findAll({
             where: {
                 trade_id: tradeId,
             },
         });
-        this.executions.push({ tradeId: tradeId, executions: executions });
+        this.executions[tradeId] = executions;
     }
 
     getExecutionsByTradeId(tradeId) {
         // get the arrays of all executions of a trade
-        const executionsOfAllTrades = this.executions;
-        // filter by trade_id
-        const filteredExecution = executionsOfAllTrades.filter(
-            (execution) => execution.tradeId === tradeId
-        );
-        return filteredExecution[0].executions; //return array of executions
+        const executions = this.executions[tradeId];
+        return executions; //return array of executions
     }
 
     getTotalVolumePerTrade(tradeId) {
         const executionsOfTrade = this.getExecutionsByTradeId(tradeId);
-        const totalVolume = executionsOfTrade.reduce((acc, executions) => {
-            acc += executions.qty;
+        const totalVolume = executionsOfTrade.reduce((acc, execution) => {
+            acc += execution.qty;
             return acc;
-        },0);
+        }, 0);
         return totalVolume;
     }
 
@@ -231,23 +228,178 @@ class TradePerformanceAnalyzer {
         }
     }
 
+    getAverageEntryPrice(tradeId) {
+        const tradeExecutions = this.getExecutionsByTradeId(tradeId); // returns array of executions
+        // get the trade side
+        const tradeSide = this.getTradeSide(tradeId);
+        if (tradeSide === "Long") {
+            // get all the executions with side = "B"
+            const weightedSumOfExecutions = tradeExecutions.reduce(
+                (acc, execution) => {
+                    if (execution.side === "B") {
+                        acc += execution.price * execution.qty;
+                    }
+                    return acc;
+                },
+                0
+            );
+            const totalBuyVolume = tradeExecutions.reduce((acc, execution) => {
+                if (execution.side === "B") {
+                    acc += execution.qty;
+                }
+                return acc;
+                },
+                0
+
+            );
+            const averageEntryPrice = weightedSumOfExecutions / totalBuyVolume;
+            return roundingNumbers(averageEntryPrice, 2);
+        } else {
+            const weightedSumOfExecutions = tradeExecutions.reduce(
+                (acc, execution) => {
+                    if (execution.side === "SS") {
+                        acc += execution.price * execution.qty;
+                    }
+                    return acc;
+                },
+                0
+            );
+            const totalSellVolume = tradeExecutions.reduce((acc, execution) => {
+                if (execution.side === "SS") {
+                    acc += execution.qty;
+                }
+                return acc;
+            }, 0);
+            const averageEntryPrice = weightedSumOfExecutions / totalSellVolume;
+            return roundingNumbers(averageEntryPrice, 2);
+        }
+    }
+
+    getAverageExitPrice(tradeId) {
+        const tradeExecutions = this.getExecutionsByTradeId(tradeId); // returns array of executions
+        // get the trade side
+        const tradeSide = this.getTradeSide(tradeId);
+        if (tradeSide === "Long") {
+            // get all the executions with side = "S"
+            const weightedSumOfExecutions = tradeExecutions.reduce(
+                (acc, execution) => {
+                    if (execution.side === "S") {
+                        acc += execution.price * execution.qty;
+                    }
+                    return acc;
+                },
+                0
+            );
+            const totalSellVolume = tradeExecutions.reduce((acc, execution) => {
+                if (execution.side === "S") {
+                    acc += execution.qty;
+                }
+                return acc;
+            }, 0);
+            const averageExitPrice = weightedSumOfExecutions / totalSellVolume;
+            return roundingNumbers(averageExitPrice, 2);
+        } else {
+            const weightedSumOfExecutions = tradeExecutions.reduce(
+                (acc, execution) => {
+                    if (execution.side === "BC") {
+                        acc += execution.price * execution.qty;
+                    }
+                    return acc;
+                },
+                0
+            );
+            const totalBuyVolume = tradeExecutions.reduce((acc, execution) => {
+                if (execution.side === "BC") {
+                    acc += execution.qty;
+                }
+                return acc;
+            }, 0);
+            const averageExitPrice = weightedSumOfExecutions / totalBuyVolume;
+            return roundingNumbers(averageExitPrice, 2);
+        }
+    }
+
+    getDuration(tradeId) {
+        // is this a day trade or swing trade
+        // get the date_open and date_close
+        const date_open = this.trades.find(
+            (trade) => trade.id === tradeId
+        ).date_open;
+        const date_close = this.trades.find(
+            (trade) => trade.id === tradeId
+        ).date_close;
+        const executions = this.getExecutionsByTradeId(tradeId);
+        if (date_open === date_close) {
+            // day trade
+            // get the time_open and time_close
+            executions.sort((a, b) => {
+                return a.time - b.time;
+            });
+
+            const time_openInSec = convertTimeToSeconds(executions[0].time);
+
+            const time_closeInSec = convertTimeToSeconds(
+                executions[executions.length - 1].time
+            );
+
+            const duration = time_closeInSec - time_openInSec;
+
+            if (duration < 60) {
+                return "Less than 1 min";
+            } else if (duration < 3600) {
+                return `${Math.floor(duration / 60)} min`;
+            } else {
+                return `${Math.floor(duration / 3600)} hr ${Math.floor(
+                    (duration % 3600) / 60
+                )} min`;
+            }
+        } else {
+            // swing trade
+            const day =
+                (new Date(date_close) - new Date(date_open)) /
+                1000 /
+                60 /
+                60 /
+                24;
+            return `${day} days`;
+        }
+    }
+
     //combinations of trade data plus executions
     getCompleteTradesInfo() {
         // get array of all trades
         const allTrades = this.trades;
         // iterate through each trade
-        const allTradesInfo = allTrades.map((trade)=> {
+        const allTradesInfo = allTrades.map((trade) => {
             // call functions to get executions #, side, total volume
-            const executionsNumber = this.getExecutionsByTradeId(trade.id).length;
+            const executions_number = this.getExecutionsByTradeId(
+                trade.id
+            ).length;
             const side = this.getTradeSide(trade.id);
-            const totalVolume = this.getTotalVolumePerTrade(trade.id);
-            const tradeId = trade.id;
-            const date = trade.date_close;
+            const total_volume = this.getTotalVolumePerTrade(trade.id);
+            const trade_Id = trade.id;
+            const date_open = trade.date_open;
+            const date_close = trade.date_close;
             const symbol = trade.symbol;
+            const entry_price = this.getAverageEntryPrice(trade.id);
+            const exit_price = this.getAverageExitPrice(trade.id);
+            const duration = this.getDuration(trade.id);
             const profit = trade.profit;
             // const fees = trade.fees;
-            return { tradeId, date, symbol, "P&L":profit, executionsNumber, side, totalVolume}
-        })
+            return {
+                trade_Id,
+                date_open,
+                date_close,
+                symbol,
+                duration,
+                entry_price,
+                exit_price,
+                "P&L": profit,
+                executions_number,
+                side,
+                total_volume,
+            };
+        });
         return allTradesInfo;
         // get info like tradeId, side, symbol, qty, date, profit, volume, executions store in an array of objects
     }
