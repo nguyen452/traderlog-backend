@@ -17,7 +17,11 @@ authRouter.post("/login", (req, res) => {
         }
         const payload = {
             id: user.id,
-            username: user.username
+            username: user.username,
+            email: user.email,
+            firstName: user.first_name,
+            lastName: user.last_name
+
         }
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
             expiresIn: '1h',
@@ -32,10 +36,20 @@ authRouter.post("/login", (req, res) => {
             maxAge: 3600000
         });
 
-        return res.status(200).json({ message: 'User is authenticated.', userId:user.id });
+        return res.status(200).json({ message: 'User is authenticated.', userId:user.id, username:user.username, email:user.email, firstName:user.first_name, lastName:user.last_name});
     })(req, res);
 });
 
+authRouter.post("/logout", (req, res) => {
+    res.clearCookie('jwt', {
+        httpOnly: true,
+        secure: false,  // Ensure this is set to false if not on HTTPS
+        sameSite:'Lax',
+        path:"/",
+
+    });
+    res.status(200).json({message:"User is logged out"});
+});
 
 authRouter.post("/sign-up", async (req, res) => {
     //function to insert into the database
