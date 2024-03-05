@@ -366,7 +366,6 @@ class TradePerformanceAnalyzer {
     }
 
     getTime_closed(tradeId) {
-        console.log(tradeId);
         const executions = this.getExecutionsByTradeId(tradeId);
         executions.sort((a, b) => {
             return new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time);
@@ -394,7 +393,6 @@ class TradePerformanceAnalyzer {
             const exit_price = this.getAverageExitPrice(trade.id);
             const duration = this.getDuration(trade.id);
             const profit = trade.profit;
-            console.log('called1')
             const time_closed = this.getTime_closed(trade.id);
 
             // const fees = trade.fees;
