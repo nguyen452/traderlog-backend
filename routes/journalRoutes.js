@@ -18,9 +18,22 @@ journalRouter.get("/dates", async(req, res) => {
         //fetch the unique dates in the trade table
         const tradesDates = await sequelize.query(`SELECT DISTINCT date_close FROM trades WHERE user_id = ${req.user.id} ORDER BY date_close DESC`, { type: QueryTypes.SELECT });
         const dates = tradesDates.map(date => date.date_close)
-        res.status(200).json(dates)
         //fetch the dates in the journal table that doesnt exist in the trade table
+        const journalDates = await Journal.findAll({
+            attributes: ['date'],
+            where: {
+                user_id: req.user.id,
+                entry: null
+            }
+        })
+        const journalDatesArray = journalDates.map(journal => journal.date)
         // combine the 2 arrays and send it to the frontend to display the dates
+        const combinedDates = [...dates, ...journalDatesArray]
+        // sort the dates in descending order
+        combinedDates.sort((a, b) => {
+            return new Date(b) - new Date(a)
+        })
+        res.status(200).json(combinedDates)
     } catch (error) {
         res.status(500).json({ error: error.toString() });
     }
