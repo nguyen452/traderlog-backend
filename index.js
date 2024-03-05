@@ -7,6 +7,7 @@ const app = express()
 const port = process.env.PORT || 4000;
 const passport = require('./strategies/localStrategy.js');
 const authRouter = require('./routes/authRoutes.js')
+const journalRouter = require('./routes/journalRoutes.js')
 const cookieParser = require('cookie-parser')
 const corsOptions = {
     origin: 'http://localhost:3000', // or true if you want to allow all origins
@@ -23,6 +24,7 @@ app.use(express.json());
 app.use(passport.initialize())
 app.use('/api/trades', tradeRouter);
 app.use('/auth', authRouter);
+app.use('/api/journal', journalRouter);
 
 const connectToDb = async () => {
     try {
