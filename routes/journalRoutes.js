@@ -5,6 +5,7 @@ const journalRouter = express.Router();
 const { sequelize } = require("../db/models/index.js");
 const { QueryTypes } = require('sequelize');
 const { Trade, Journal, User } = require("../db/models");
+const dateParser = require("../utility/dateParser.js");
 
 const passport = require("passport");
 const TradePerformanceAnalyzer = require("../utility/tradeAnalyzer.js");
@@ -23,9 +24,10 @@ journalRouter.get("/dates", async(req, res) => {
             attributes: ['date'],
             where: {
                 user_id: req.user.id,
-                entry: null
+                has_trade: false
             }
         })
+
         const journalDatesArray = journalDates.map(journal => journal.date)
         // combine the 2 arrays and send it to the frontend to display the dates
         const combinedDates = [...dates, ...journalDatesArray]
@@ -85,6 +87,24 @@ journalRouter.get("/tradesData", async(req,res) => {
         res.status(500).json({ error: error.toString() });
     }
 })
+
+journalRouter.post("/entry", async(req,res) => {
+    const {date, hasTrade, entry } = req.body
+
+
+  try {
+    const journalEntry = await Journal.create({
+      user_id: req.user.id,
+      date: dateParser(date),
+      has_trade: hasTrade,
+      entry: entry,
+    })
+    console.log(journalEntry)
+    res.status(200).json(journalEntry)
+  } catch (error) {
+    res.status(500).json({ error: error.toString() });
+  }
+});
 
 journalRouter.get('/trades', async(req, res) => {})
 
