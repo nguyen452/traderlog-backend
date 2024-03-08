@@ -1,5 +1,6 @@
 "use strict";
-const { Model } = require("sequelize");
+const { Model} = require("sequelize");
+const { Sequelize } = require(".");
 module.exports = (sequelize, DataTypes) => {
   class Journal extends Model {npx
     static associate(models) {
@@ -22,11 +23,17 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
       date: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: false,
       },
-      entry: DataTypes.TEXT,
-      allowNull: true,
+      has_trade: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+      },
+      entry: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
     },
     {
       sequelize,
