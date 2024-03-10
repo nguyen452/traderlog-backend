@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       date: {
         type: DataTypes.DATEONLY,
         allowNull: false,
+        unique: true,
       },
       has_trade: {
         type: DataTypes.BOOLEAN,

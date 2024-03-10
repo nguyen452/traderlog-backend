@@ -88,6 +88,20 @@ journalRouter.get("/tradesData", async(req,res) => {
     }
 })
 
+journalRouter.get("/entry/:date" , async(req, res) => {
+    const { date } = req.params;
+    const entry = await Journal.findOne({
+        where: {
+            date: date,
+            user_id: req.user.id
+        }
+    })
+    if (!entry) {
+        return { entry: null }
+    }
+    res.status(200).json(entry)
+})
+
 journalRouter.post("/entry", async(req,res) => {
     const {date, hasTrade, entry } = req.body
 
@@ -106,6 +120,20 @@ journalRouter.post("/entry", async(req,res) => {
   }
 });
 
-journalRouter.get('/trades', async(req, res) => {})
+journalRouter.put('/entry/:date', async(req, res) => {
+    const { date } = req.params;
+    const { entry } = req.body;
+    try {
+        await Journal.update({ entry: entry }, {
+            where: {
+                date: date,
+            }
+        });
+        res.status(200).json(entry);
+    } catch (error) {
+        res.status(500).json({ error: error.toString() });
+    }
+});
+
 
 module.exports = journalRouter;
