@@ -1,4 +1,5 @@
 const roundingNumbers = require("./roundingNumbers");
+const { convertToCents, convertToDollars } = require("./moneyCalculation");
 const { Execution } = require("../db/models");
 const convertTimeToSeconds = require("./convertTimetoSecond");
 
@@ -143,17 +144,97 @@ class TradePerformanceAnalyzer {
             )
         );
     }
+    getAllYears() {
+        // get the array of all trades
+        const allTrades = this.trades;
+        // filter the date_close to get the unique years
+        const uniqueYear = allTrades.reduce((acc,trade) => {
+            const year = trade.date_close.splice(0,4);
+            if (!acc.includes(year)) {
+                acc.push(year);
+            }
+            return acc;
+        }, [])
+        return uniqueYear;
 
+    }
     getProfitsPerDay() {
         const datesProfits = this.trades.reduce((acc, trade) => {
             if (trade.date_close in acc) {
-                acc[trade.date_close] += Number(trade.profit);
+                acc[trade.date_close] += convertToCents(Number(trade.profit));
             } else {
-                acc[trade.date_close] = Number(trade.profit);
+                acc[trade.date_close] = convertToCents(Number(trade.profit));
             }
             return acc;
         }, {});
-        return datesProfits;
+        const profitsInDollars = {};
+        for (const [date, profit] of Object.entries(datesProfits)) {
+            profitsInDollars[date] = convertToDollars(profit);
+        }
+        return profitsInDollars;
+    };
+    getNumberOfTradesPerDay() {
+      // that a list of all trades
+      const trades = this.trades;
+      return trades.reduce((acc, trade) => {
+        console.log(acc);
+        if (trade.date_close in acc) {
+          acc[trade.date_close] += 1;
+        } else {
+            acc[trade.date_close] = 1;
+        }
+        return acc;
+      }, {});
+    }
+
+    calculateTotalProfit() {
+        const totalProfit = this.trades.reduce((acc, trade) => {
+            return acc + Number(trade.profit);
+        }, 0);
+        return roundingNumbers(totalProfit, 2);
+    }
+
+    calculateTotalLoss() {
+        const totalLoss = this.trades.reduce((acc, trade) => {
+            if (trade.profit < 0) {
+                return acc + Number(trade.profit);
+            }
+            return acc;
+        }, 0);
+        return roundingNumbers(totalLoss, 2);
+    }
+
+    calculateNetProfit() {
+        const totalProfit = this.calculateTotalProfit();
+        const totalLoss = this.calculateTotalLoss();
+        return roundingNumbers(totalProfit + totalLoss, 2);
+    }
+
+    calculateAverageProfit() {
+        const totalProfit = this.calculateTotalProfit();
+        const totalTrades = this.trades.length;
+        if (totalTrades === 0) {
+            return 0;
+        }
+        return roundingNumbers(totalProfit / totalTrades, 2);
+    }
+
+    calculateAverageLoss() {
+        const totalLoss = this.calculateTotalLoss();
+        const losingTrades = this.getLosingTrades().length;
+        if (losingTrades === 0) {
+            return 0;
+        }
+        return roundingNumbers(totalLoss / losingTrades, 2);
+    }
+
+    calculateProfitFactor() {
+        const totalProfit = this.calculateTotalProfit();
+        const totalLoss = this.calculateTotalLoss();
+        if (totalLoss === 0) {
+            return 0;
+        }
+        return roundingNumbers(totalProfit / Math.abs(totalLoss), 2);
     }
 
     getAccumulatedProfitsPerDay() {
