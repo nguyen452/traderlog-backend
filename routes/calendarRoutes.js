@@ -24,22 +24,37 @@ calendarRouter.get('/year', async (req, res) => {
         }
         return acc;
     }, [])
+    years.sort((a, b) => a - b)
     res.status(200).json(years);
 });
 
 calendarRouter.get('/tradesData', async (req, res) => {
-    try {
-        let { month , year } = req.query;
-        if (month.length === 1) {
-            month = `0${Number(month) + 1}`;
+    let { month, year } = req.query;
+    //convert month and year to number
+    year = Number(year);
+    let startDate;
+    let endDate;
+    //get the start and end date of the month
+    if (month === 'null') {
+        startDate = `${year}-01-01`;
+        endDate = `${year + 1}-01-01`;
+    } else {
+        month = Number(month) + 1;
+        console.log(month)
+        startDate = `${year}-${month}-01`;
+        endDate = `${year}-${month + 1}-01`;
+        if (month === 12) {
+            endDate = `${year + 1}-01-01`;
         }
-
+    }
+    console.log(startDate, endDate);
+    try {
         const trades = await Trade.findAll({
             where: {
                 user_id: req.user.id,
                 date_close: {
-                    [Op.gte]: `${year}-${month}-01`,
-                    [Op.lt]: `${year}-${Number(month) + 1 }-01`
+                    [Op.gte]: startDate,
+                    [Op.lt]: endDate
                 }
             }
         })
@@ -48,14 +63,15 @@ calendarRouter.get('/tradesData', async (req, res) => {
             newTradeAnalyzer.addTrade(trade);
         })
         const profitsPerDay = newTradeAnalyzer.getProfitsPerDay();
-        const getNumberOfTradesPerDay = newTradeAnalyzer.getNumberOfTradesPerDay();
-        console.log(getNumberOfTradesPerDay);
-        const tradeData = {
-            profitsPerDay,
-            getNumberOfTradesPerDay
-        }
 
-        res.status(200).json(tradeData);
+        if (month !== 'null') {
+            const getNumberOfTradesPerDay = newTradeAnalyzer.getNumberOfTradesPerDay();
+            res.status(200).json({ profitsPerDay, getNumberOfTradesPerDay });
+            return;
+        } else {
+            res.status(200).json({ profitsPerDay });
+            return;
+        }
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'An error occurred while fetching trade data.' });
