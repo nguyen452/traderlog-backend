@@ -35,7 +35,10 @@ tradeRouter.get("/tradeMetrics/:period", async (req, res) => {
         let tradeData = await getAllModelDataByUserId(Trade, req.user.id);
         // filter trades by period
         const filteredTradeData = getFilteredDataByPeriod(tradeData, period);
-        const recentTradeData = getFilteredDataByPeriod(tradeData, "Last 30 days");// default would be last 30 days
+        const recentTradeData = getFilteredDataByPeriod(
+            tradeData,
+            "Last 30 days"
+        ); // default would be last 30 days
         const tradesAnalyzer = new TradeAnalyzer();
         const recentTradesAnalyzer = new TradeAnalyzer();
         // array of tradesId to add executions
@@ -67,7 +70,8 @@ tradeRouter.get("/tradeMetrics/:period", async (req, res) => {
         const totalBreakevenTrades = tradesAnalyzer.getBreakevenTrades().length;
         const profitFactor = tradesAnalyzer.getProfitFactor();
         const profitsPerDay = tradesAnalyzer.getProfitsPerDay();
-        const accumulatedProfitsPerDay = tradesAnalyzer.getAccumulatedProfitsPerDay();
+        const accumulatedProfitsPerDay =
+            tradesAnalyzer.getAccumulatedProfitsPerDay();
         const averageWin = tradesAnalyzer.getAverageWin();
         const averageLoss = tradesAnalyzer.getAverageLoss();
         const completeTradesInfo = tradesAnalyzer.getCompleteTradesInfo();
@@ -100,8 +104,26 @@ tradeRouter.get("/tradeMetrics/:period", async (req, res) => {
 });
 
 // get trade by id
-tradeRouter.get("/:id", (req, res) => {
+tradeRouter.get("/:id", async (req, res) => {
     //code to pull trade matching id from database and return it
+    try {
+        const trade = await Trade.findByPk(req.params.id);
+        const newTradeAnalyzer = new TradeAnalyzer();
+        newTradeAnalyzer.addTrade(trade);
+
+        await newTradeAnalyzer.addExecutionsByTradeId(trade.id);
+
+        const totalSharesTraded = newTradeAnalyzer.getTotalVolumePerTrade(
+            trade.id
+        );
+        const tradeExecutions = newTradeAnalyzer.getExecutionsByTradeId(
+            trade.id
+        );
+
+        res.status(200).json({ trade, totalSharesTraded, tradeExecutions });
+    } catch (error) {
+        res.status(500).json({ message: error });
+    }
 });
 
 // create new trade
