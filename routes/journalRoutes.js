@@ -113,7 +113,6 @@ journalRouter.post("/entry", async(req,res) => {
       has_trade: hasTrade,
       entry: entry,
     })
-    console.log(journalEntry)
     res.status(200).json(journalEntry)
   } catch (error) {
     res.status(500).json({ error: error.toString() });

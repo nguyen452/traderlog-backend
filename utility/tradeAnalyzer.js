@@ -177,7 +177,6 @@ class TradePerformanceAnalyzer {
       // that a list of all trades
       const trades = this.trades;
       return trades.reduce((acc, trade) => {
-        console.log(acc);
         if (trade.date_close in acc) {
           acc[trade.date_close] += 1;
         } else {
