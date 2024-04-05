@@ -15,18 +15,6 @@ const TradeAnalyzer = require("../utility/tradeAnalyzer");
 
 tradeRouter.use(passport.authenticate("jwt", { session: false }));
 
-// tradeRouter.use((req, res, next) => {
-//     console.log(req.user)
-//     let userId = req.user.user_id;
-//     let userIdParams = req.params.userId;
-
-//     if (userId === userIdParams) {
-//         next()
-//     } else {
-//         res.status(401).json({message:'unauthorized access'})
-//     }
-// })
-
 // get all trade
 tradeRouter.get("/tradeMetrics/:period", async (req, res) => {
     const period = req.params.period;
@@ -35,12 +23,8 @@ tradeRouter.get("/tradeMetrics/:period", async (req, res) => {
         let tradeData = await getAllModelDataByUserId(Trade, req.user.id);
         // filter trades by period
         const filteredTradeData = getFilteredDataByPeriod(tradeData, period);
-        const recentTradeData = getFilteredDataByPeriod(
-            tradeData,
-            "Last 30 days"
-        ); // default would be last 30 days
+        // create a new instance of TradeAnalyzer
         const tradesAnalyzer = new TradeAnalyzer();
-        const recentTradesAnalyzer = new TradeAnalyzer();
         // array of tradesId to add executions
         const tradeIdArray = [];
         // add trades to tradeAnalyzer
