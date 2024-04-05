@@ -2,6 +2,7 @@ const roundingNumbers = require("./roundingNumbers");
 const { convertToCents, convertToDollars } = require("./moneyCalculation");
 const { Execution } = require("../db/models");
 const convertTimeToSeconds = require("./convertTimetoSecond");
+const { get } = require("@alpacahq/alpaca-trade-api/dist/resources/account");
 
 class TradePerformanceAnalyzer {
     constructor() {
@@ -173,6 +174,34 @@ class TradePerformanceAnalyzer {
         }
         return profitsInDollars;
     };
+
+    getAverageDailyVolume() {
+        const datesVolume = this.trades.reduce((acc, trade) => {
+           if (trade.date_close in acc) {
+                acc[trade.date_close] += this.getTotalVolumePerTrade(trade.id);
+           } else {
+               acc[trade.date_close] = this.getTotalVolumePerTrade(trade.id);
+           }
+           return acc;
+        }, {});
+
+        const totalDays = Object.keys(datesVolume).length;
+        const totalVolume = Object.values(datesVolume).reduce((acc, volume) => {
+            return acc + volume;
+        }, 0);
+        return roundingNumbers(totalVolume / totalDays, 0);
+    }
+
+    getAverageDailyPnl() {
+        const profitsPerDay = this.getProfitsPerDay();
+        const totalDays = Object.keys(profitsPerDay).length;
+        const totalPnl = Object.values(profitsPerDay).reduce((acc, profit) => {
+            return acc + profit;
+        }, 0);
+        const averagePnl = totalPnl / totalDays;
+        return roundingNumbers(averagePnl, 2);
+    }
+
     getNumberOfTradesPerDay() {
       // that a list of all trades
       const trades = this.trades;
@@ -294,6 +323,15 @@ class TradePerformanceAnalyzer {
             return acc;
         }, 0);
         return totalVolume;
+    }
+    getTotalVolumeTraded() {
+        const volumes = this.trades.reduce((acc, trade) => {
+            return acc += this.getTotalVolumePerTrade(trade.id);
+
+        },0)
+
+        return volumes;
+
     }
 
     getTradeSide(tradeId) {
