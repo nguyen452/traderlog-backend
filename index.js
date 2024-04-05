@@ -10,6 +10,7 @@ const authRouter = require('./routes/authRoutes.js')
 const journalRouter = require('./routes/journalRoutes.js')
 const calendarRouter = require('./routes/calendarRoutes.js')
 const marketDataRouter = require('./routes/marketDataRoutes.js');
+const reportRouter = require('./routes/reportRoutes.js');
 const cookieParser = require('cookie-parser')
 const corsOptions = {
     origin: 'http://localhost:3000', // or true if you want to allow all origins
@@ -29,8 +30,9 @@ app.use('/auth', authRouter);
 app.use('/api/journal', journalRouter);
 app.use('/api/calendar', calendarRouter);
 app.use('/api/marketData', marketDataRouter);
-
+app.use('/api/report', reportRouter);
 const connectToDb = async () => {
+
     try {
         await sequelize.authenticate();
         console.log('connected to the database');
