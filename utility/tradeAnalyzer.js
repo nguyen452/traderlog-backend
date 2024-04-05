@@ -2,7 +2,6 @@ const roundingNumbers = require("./roundingNumbers");
 const { convertToCents, convertToDollars } = require("./moneyCalculation");
 const { Execution } = require("../db/models");
 const convertTimeToSeconds = require("./convertTimetoSecond");
-const { get } = require("@alpacahq/alpaca-trade-api/dist/resources/account");
 
 class TradePerformanceAnalyzer {
     constructor() {
@@ -149,15 +148,14 @@ class TradePerformanceAnalyzer {
         // get the array of all trades
         const allTrades = this.trades;
         // filter the date_close to get the unique years
-        const uniqueYear = allTrades.reduce((acc,trade) => {
-            const year = trade.date_close.splice(0,4);
+        const uniqueYear = allTrades.reduce((acc, trade) => {
+            const year = trade.date_close.splice(0, 4);
             if (!acc.includes(year)) {
                 acc.push(year);
             }
             return acc;
-        }, [])
+        }, []);
         return uniqueYear;
-
     }
     getProfitsPerDay() {
         const datesProfits = this.trades.reduce((acc, trade) => {
@@ -173,16 +171,20 @@ class TradePerformanceAnalyzer {
             profitsInDollars[date] = convertToDollars(profit);
         }
         return profitsInDollars;
-    };
+    }
 
     getAverageDailyVolume() {
+        if (this.trades.length === 0) {
+            return 0;
+        };
+
         const datesVolume = this.trades.reduce((acc, trade) => {
-           if (trade.date_close in acc) {
+            if (trade.date_close in acc) {
                 acc[trade.date_close] += this.getTotalVolumePerTrade(trade.id);
-           } else {
-               acc[trade.date_close] = this.getTotalVolumePerTrade(trade.id);
-           }
-           return acc;
+            } else {
+                acc[trade.date_close] = this.getTotalVolumePerTrade(trade.id);
+            }
+            return acc;
         }, {});
 
         const totalDays = Object.keys(datesVolume).length;
@@ -193,6 +195,9 @@ class TradePerformanceAnalyzer {
     }
 
     getAverageDailyPnl() {
+        if (this.trades.length === 0) {
+            return 0;
+        }
         const profitsPerDay = this.getProfitsPerDay();
         const totalDays = Object.keys(profitsPerDay).length;
         const totalPnl = Object.values(profitsPerDay).reduce((acc, profit) => {
@@ -203,16 +208,66 @@ class TradePerformanceAnalyzer {
     }
 
     getNumberOfTradesPerDay() {
-      // that a list of all trades
-      const trades = this.trades;
-      return trades.reduce((acc, trade) => {
-        if (trade.date_close in acc) {
-          acc[trade.date_close] += 1;
-        } else {
-            acc[trade.date_close] = 1;
+        // that a list of all trades
+        const trades = this.trades;
+        return trades.reduce((acc, trade) => {
+            if (trade.date_close in acc) {
+                acc[trade.date_close] += 1;
+            } else {
+                acc[trade.date_close] = 1;
+            }
+            return acc;
+        }, {});
+    }
+
+    getMaxConsecutiveWins() {
+        const tradesWithTimeClosed = this.trades.map((trade) => {
+            trade.date_close =
+                trade.date_close + " " + this.getTime_closed(trade.id);
+            return trade;
+        });
+        tradesWithTimeClosed.sort((a, b) => {
+            return new Date(a.date_close) - new Date(b.date_close);
+        });
+        let maxConsecutiveWins = 0;
+        let currentConsecutiveWins = 0;
+        for (let i = 0; i < tradesWithTimeClosed.length; i++) {
+            if (tradesWithTimeClosed[i].profit > 0) {
+                currentConsecutiveWins++;
+                if (currentConsecutiveWins > maxConsecutiveWins) {
+                    maxConsecutiveWins = currentConsecutiveWins;
+                }
+            } else {
+                currentConsecutiveWins = 0;
+            }
         }
-        return acc;
-      }, {});
+        return maxConsecutiveWins;
+    }
+
+    getMaxConsecutiveLosses() {
+        const tradesWithTimeClosed = this.trades.map((trade) => {
+            trade.date_close =
+                trade.date_close + " " + this.getTime_closed(trade.id);
+            return trade;
+        });
+        tradesWithTimeClosed.sort(
+            (a, b) => new Date(a.date_close) - new Date(b.date_close)
+        );
+
+        let maxConsecutiveLosses = 0;
+        let currentConsecutiveLosses = 0;
+        for (let i = 0; i < tradesWithTimeClosed.length; i++) {
+            // Check if the trade was a loss.
+            if (tradesWithTimeClosed[i].profit < 0) {
+                currentConsecutiveLosses++;
+                if (currentConsecutiveLosses > maxConsecutiveLosses) {
+                    maxConsecutiveLosses = currentConsecutiveLosses;
+                }
+            } else {
+                currentConsecutiveLosses = 0;
+            }
+        }
+        return maxConsecutiveLosses;
     }
 
     calculateTotalProfit() {
@@ -326,12 +381,10 @@ class TradePerformanceAnalyzer {
     }
     getTotalVolumeTraded() {
         const volumes = this.trades.reduce((acc, trade) => {
-            return acc += this.getTotalVolumePerTrade(trade.id);
-
-        },0)
+            return (acc += this.getTotalVolumePerTrade(trade.id));
+        }, 0);
 
         return volumes;
-
     }
 
     getTradeSide(tradeId) {
@@ -366,10 +419,7 @@ class TradePerformanceAnalyzer {
                     acc += execution.qty;
                 }
                 return acc;
-                },
-                0
-
-            );
+            }, 0);
             const averageEntryPrice = weightedSumOfExecutions / totalBuyVolume;
             return roundingNumbers(averageEntryPrice, 2);
         } else {
@@ -486,7 +536,10 @@ class TradePerformanceAnalyzer {
     getTime_closed(tradeId) {
         const executions = this.getExecutionsByTradeId(tradeId);
         executions.sort((a, b) => {
-            return new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time);
+            return (
+                new Date(b.date + " " + b.time) -
+                new Date(a.date + " " + a.time)
+            );
         });
         return executions[0].time;
     }
@@ -526,7 +579,7 @@ class TradePerformanceAnalyzer {
                 executions_number,
                 side,
                 total_volume,
-                time_closed
+                time_closed,
             };
         });
         return allTradesInfo;
