@@ -31,8 +31,8 @@ app.use('/api/journal', journalRouter);
 app.use('/api/calendar', calendarRouter);
 app.use('/api/marketData', marketDataRouter);
 app.use('/api/report', reportRouter);
-const connectToDb = async () => {
 
+const connectToDb = async () => {
     try {
         await sequelize.authenticate();
         console.log('connected to the database');
